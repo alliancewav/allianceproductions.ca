@@ -1,0 +1,44 @@
+{
+  "name": "allianceproductions.ca",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "next lint",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop alliance-productions",
+    "pm2:restart": "pm2 restart alliance-productions",
+    "pm2:logs": "pm2 logs alliance-productions",
+    "pm2:status": "pm2 status"
+  },
+  "keywords": [
+    "music",
+    "studio",
+    "production",
+    "montreal"
+  ],
+  "author": "Alliance Productions",
+  "license": "ISC",
+  "description": "Alliance Productions - Montreal Recording Studio",
+  "dependencies": {
+    "@types/node": "^25.0.3",
+    "@types/react": "^19.2.7",
+    "autoprefixer": "^10.4.23",
+    "framer-motion": "^12.24.12",
+    "lucide-react": "^0.562.0",
+    "next": "^14.2.35",
+    "nodemailer": "^7.0.12",
+    "postcss": "^8.5.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.4",
+    "@types/react-dom": "^19.2.3",
+    "pm2": "^6.0.14"
+  }
+}

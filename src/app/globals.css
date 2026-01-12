@@ -1,0 +1,408 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ap-red: #FFFFFF;
+  --ap-red-dark: #E0E0E0;
+  --ap-black: #0A0A0A;
+  --ap-charcoal: #141414;
+  --ap-gray: #1A1A1A;
+  --ap-silver: #8A8A8A;
+  --ap-gold: #D4AF37;
+  --ap-gold-light: #F4D03F;
+  --ap-gold-dark: #B8860B;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--ap-black);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--ap-silver);
+  color: var(--ap-black);
+}
+
+/* Grain overlay effect */
+.grain-overlay {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  width: 200%;
+  height: 200%;
+  background: transparent url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E") repeat;
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1000;
+  animation: grain 8s steps(10) infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--ap-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ap-silver);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #AAAAAA;
+}
+
+/* Glow effect utility */
+.glow-red {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(255, 255, 255, 0.1);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.15);
+}
+
+/* Golden rotating border effect for premium cards */
+@keyframes golden-rotate {
+  0% {
+    --angle: 0deg;
+  }
+  100% {
+    --angle: 360deg;
+  }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.golden-shimmer-border {
+  position: relative;
+  background: linear-gradient(#141414, #141414) padding-box,
+              conic-gradient(from var(--angle), transparent 20%, var(--ap-gold-dark) 40%, var(--ap-gold-light) 50%, var(--ap-gold-dark) 60%, transparent 80%) border-box;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  animation: golden-rotate 6s linear infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #fff 0%, var(--ap-silver) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-red {
+  background: linear-gradient(135deg, var(--ap-red) 0%, #FF6B5B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply relative overflow-hidden bg-white text-black font-body font-semibold px-8 py-4 rounded-none transition-all duration-300;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.btn-primary::before {
+  content: '';
+  @apply absolute inset-0 bg-black opacity-0 transition-opacity duration-300;
+}
+
+.btn-primary:hover::before {
+  @apply opacity-10;
+}
+
+.btn-primary:hover {
+  @apply scale-105;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary {
+  @apply relative border-2 border-white/30 text-white font-body font-semibold px-8 py-4 rounded-none transition-all duration-300 bg-transparent;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.btn-secondary:hover {
+  @apply border-white bg-white/10;
+}
+
+/* Section divider */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ap-silver), transparent);
+}
+
+/* Animated underline */
+.animated-underline {
+  position: relative;
+}
+
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: white;
+  transition: width 0.3s ease;
+}
+
+.animated-underline:hover::after {
+  width: 100%;
+}
+
+/* Hero background pattern */
+.hero-pattern {
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    linear-gradient(180deg, var(--ap-black) 0%, var(--ap-charcoal) 100%);
+}
+
+/* Feature card hover effect */
+.feature-card {
+  @apply relative bg-ap-charcoal/50 backdrop-blur-sm border border-white/5 p-8 transition-all duration-500;
+}
+
+.feature-card::before {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity duration-500;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+}
+
+.feature-card:hover::before {
+  @apply opacity-100;
+}
+
+.feature-card:hover {
+  @apply border-white/30 transform -translate-y-2;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+/* Accordion styles */
+.accordion-item {
+  @apply border-b border-white/10;
+}
+
+.accordion-trigger {
+  @apply w-full flex justify-between items-center py-6 text-left font-body text-lg text-white/90 hover:text-white transition-colors;
+}
+
+.accordion-content {
+  @apply overflow-hidden text-white/70 font-body leading-relaxed;
+}
+
+/* Responsive typography */
+@layer utilities {
+  .text-display-xl {
+    @apply text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-display tracking-tight leading-none;
+  }
+  
+  .text-display-lg {
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display tracking-tight leading-none;
+  }
+  
+  .text-display-md {
+    @apply text-3xl sm:text-4xl md:text-5xl font-display tracking-tight leading-tight;
+  }
+
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Parallax background sizing - ensures smooth parallax without edge gaps */
+.parallax-bg {
+  min-height: 120%;
+  width: 100%;
+  will-change: transform;
+}
+
+/* Smooth section transitions */
+section {
+  position: relative;
+}
+
+/* Enhanced focus states for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Shake animation for validation errors */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Pulse animation for attention-grabbing elements */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.pulse-attention {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth hover transitions for interactive elements */
+.interactive-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.interactive-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Field error highlight */
+.field-error {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Footer reveal effect - desktop only */
+@media (min-width: 768px) {
+  .footer-reveal-wrapper {
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+  
+  .footer-reveal {
+    position: sticky;
+    bottom: 0;
+    z-index: 0;
+  }
+}
+
+/* GPU Acceleration for smooth performance */
+.gpu-accelerate {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize backdrop-blur elements for GPU */
+[class*="backdrop-blur"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Hardware acceleration for animated elements */
+[class*="motion"],
+[class*="animate"],
+[class*="transition"] {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* Optimize parallax backgrounds */
+.parallax-bg,
+[style*="backgroundImage"] {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU acceleration for gradient overlays */
+[class*="bg-gradient"] {
+  transform: translateZ(0);
+}
+
+/* Optimize fixed/absolute positioned overlays */
+.grain-overlay,
+[class*="absolute"][class*="inset-0"] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Reduce paint on scroll - removed contain property as it breaks Safari gap fix */
+
+/* Optimize blur performance */
+@layer utilities {
+  .blur-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .will-change-transform {
+    will-change: transform;
+  }
+  
+  .will-change-opacity {
+    will-change: opacity;
+  }
+  
+  .will-change-filter {
+    will-change: filter;
+  }
+}
+
+/* Safari iOS fix for 1px gap between sections */
+/* GPU acceleration for smooth rendering */
+section {
+  position: relative;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Footer reveal wrapper - solid background */
+.footer-reveal-wrapper {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  background-color: #0A0A0A;
+  position: relative;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .grain-overlay {
+    animation: none;
+  }
+}

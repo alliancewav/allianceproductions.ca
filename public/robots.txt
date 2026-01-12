@@ -1,0 +1,11 @@
+# Robots.txt for Alliance Productions
+# https://allianceproductions.ca
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://allianceproductions.ca/sitemap.xml
+
+# Disallow admin/API routes
+Disallow: /api/
