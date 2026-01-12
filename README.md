@@ -1,6 +1,8 @@
 # Alliance Productions
 
-Modern landing page for Alliance Productions Records Inc. - a professional recording studio based in Montreal.
+Official website for Alliance Productions Records Inc. - a professional recording studio based in Montreal.
+
+**Live site:** [allianceproductions.ca](https://allianceproductions.ca)
 
 ## Tech Stack
 
@@ -12,38 +14,45 @@ Modern landing page for Alliance Productions Records Inc. - a professional recor
 
 ## Getting Started
 
-### Development
+1. Clone the repository
+2. Copy `.env.example` to `.env.local` and fill in your credentials
+3. Install dependencies and build:
 
 ```bash
 npm install
-npm run dev
-```
-
-The development server will start at `http://localhost:3000`.
-
-### Production Build
-
-```bash
 npm run build
 npm run start
 ```
 
-The production server uses the `PORT` environment variable (defaults to 3000).
+## Environment Variables
+
+See `.env.example` for required environment variables (email configuration for booking form).
 
 ## Project Structure
 
 ```
 src/
 ├── app/
+│   ├── api/booking/    # Booking form API endpoint
+│   ├── privacy/        # Privacy policy page
 │   ├── layout.tsx      # Root layout with fonts and metadata
 │   ├── page.tsx        # Main landing page
-│   └── globals.css     # Global styles and Tailwind config
+│   ├── not-found.tsx   # 404 page
+│   └── globals.css     # Global styles
 └── components/
     ├── Hero.tsx        # Hero section with animated text
+    ├── Navbar.tsx      # Navigation bar
     ├── Features.tsx    # Feature cards grid
-    ├── Mission.tsx     # Mission statement with parallax
+    ├── Pricing.tsx     # Studio pricing packages
+    ├── HowItWorks.tsx  # Booking process steps
+    ├── BeatPass.tsx    # BeatPass integration section
+    ├── Mission.tsx     # Mission statement
     ├── FAQ.tsx         # FAQ accordion
-    └── Footer.tsx      # Footer with CTAs
+    ├── Footer.tsx      # Footer with social links
+    ├── BookingModal.tsx      # Studio booking modal
+    ├── BookingContext.tsx    # Booking state management
+    ├── CookieConsent.tsx     # Cookie consent banner
+    └── BackToTop.tsx         # Scroll to top button
 ```
 
 ## Design System
@@ -52,15 +61,15 @@ src/
 - **Background**: #0A0A0A (Deep Black)
 - **Typography**: Bebas Neue (Display) + Outfit (Body)
 
-## External Links
-
-- Booking: https://alliancewav.fibery.io/@public/forms/1TnEtzud
-- Beats: https://open.beatpass.ca/
-
 ## Deployment
 
-The site is configured to run behind nginx proxy in CloudPanel. Ensure the `app_port` in the vhost configuration matches the PORT environment variable.
+The site runs on CloudPanel with PM2 behind an nginx reverse proxy.
+
+```bash
+npm run build
+pm2 restart alliance-productions
+```
 
 ---
 
-© Alliance Productions Records Inc. - Trusted in the music industry since 2020.
+© Alliance Productions Records Inc.
