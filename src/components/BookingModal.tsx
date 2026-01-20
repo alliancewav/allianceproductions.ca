@@ -37,7 +37,7 @@ interface BookingModalProps {
 
 // Business hours configuration
 const BUSINESS_HOURS = {
-  0: null, // Sunday - Closed
+  0: { open: 11, close: 22 }, // Sunday
   1: { open: 11, close: 22 }, // Monday
   2: { open: 11, close: 22 }, // Tuesday
   3: { open: 11, close: 22 }, // Wednesday
@@ -76,6 +76,10 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [showBundleInfo, setShowBundleInfo] = useState(false)
+  
+  // Rental mode confirmation modal (shown when user drags to 1 hour)
+  const [showRentalConfirm, setShowRentalConfirm] = useState(false)
+  const pendingOneHourRef = useRef(false)
   
   // Session configuration
   const [sessionHours, setSessionHours] = useState(2)
@@ -526,7 +530,7 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
     const dayOfWeek = date.getDay()
     const hours = BUSINESS_HOURS[dayOfWeek as keyof typeof BUSINESS_HOURS]
     
-    if (!hours) return sessionHours // Sunday - all hours are after-hours
+    if (!hours) return sessionHours // Fallback if day not configured
     
     const [startHour] = contactInfo.preferredTime.split(':').map(Number)
     const sessionEndHour = startHour + sessionHours
@@ -557,13 +561,32 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
   // Check if stems export should be free (only with bundle now)
   const isStemsExportFree = includeMixMasterBundle
 
-  // Auto-switch to rental mode when session is 1 hour (minimum 2 hours for recording)
+  // Show confirmation when user tries to select 1 hour (recording requires min 2 hours)
   useEffect(() => {
-    if (sessionHours === 1) {
-      setIncludeEngineer(false)
-      setIncludeProducer(false)
+    if (sessionHours === 1 && includeEngineer && !pendingOneHourRef.current) {
+      // User had engineer enabled and dragged to 1 hour - show confirmation
+      pendingOneHourRef.current = true
+      setShowRentalConfirm(true)
+      // Temporarily revert to 2 hours until user confirms
+      setSessionHours(2)
     }
-  }, [sessionHours])
+  }, [sessionHours, includeEngineer])
+
+  // Handle rental confirmation
+  const handleConfirmRental = () => {
+    pendingOneHourRef.current = false
+    setShowRentalConfirm(false)
+    setSessionHours(1)
+    setIncludeEngineer(false)
+    setIncludeProducer(false)
+  }
+
+  const handleCancelRental = () => {
+    pendingOneHourRef.current = false
+    setShowRentalConfirm(false)
+    // Explicitly set to 2 hours (minimum for recording sessions)
+    setSessionHours(2)
+  }
 
   // Constrain producerHours when sessionHours changes
   useEffect(() => {
@@ -740,9 +763,6 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
       if (selectedDate < minBookingDate) {
         newErrors.preferredDate = 'Bookings require at least 2 days advance notice'
       }
-      if (selectedDate.getDay() === 0) {
-        newErrors.preferredDate = 'Studio is closed on Sundays'
-      }
     }
     
     // Time validation
@@ -822,15 +842,16 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
         includeEngineer,
         includeProducer,
         producerHours: includeProducer ? producerHours : 0,
+        isAfterHours: afterHoursCount > 0,
         afterHoursCount,
         total: totals.session
       },
       postProduction: sessionMode === 'recording' ? {
-        mixing: includeMixing,
-        mastering: includeMastering,
-        mixMasterBundle: includeMixMasterBundle,
-        vocalTuning: includeVocalTuning,
-        vocalEditing: includeVocalEditing,
+        mixing: { qty: includeMixing ? 1 : 0, price: PRICES.mixing, revisionsIncluded: 2, includesVocalTuning: true, includesVocalEditing: false },
+        mastering: { qty: includeMastering ? 1 : 0, price: PRICES.mastering },
+        mixMasterBundle: { qty: includeMixMasterBundle ? 1 : 0, price: PRICES.mixMasterBundle, revisionsIncluded: 5, includesVocalTuning: true, includesVocalEditing: true },
+        vocalTuning: { qty: includeVocalTuning ? 1 : 0, price: PRICES.vocalTuning, freeQty: (includeMixing || includeMixMasterBundle) ? 1 : 0 },
+        vocalEditing: { qty: includeVocalEditing ? 1 : 0, price: PRICES.vocalEditing, freeQty: includeMixMasterBundle ? 1 : 0 },
         total: totals.post
       } : null,
       deliverables: {
@@ -984,13 +1005,33 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 bg-white/5 shrink-0 relative z-10">
-              <div>
-                <h2 className="text-lg sm:text-xl font-display text-white uppercase tracking-wide">
-                  {step === 0 ? 'Book Your Session' : bookingPath === 'full-project' ? 'Project Inquiry' : 'Configure Your Session'}
-                </h2>
-                <p className="text-white/50 text-xs sm:text-sm mt-0.5">
-                  {step === 0 ? 'How can we help you today?' : bookingPath === 'full-project' ? 'Let\'s bring your vision to life' : sessionMode === 'rental' ? 'Studio Rental' : 'Recording Session'}
-                </p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-display text-white uppercase tracking-wide">
+                    {step === 0 ? 'Book Your Session' : bookingPath === 'full-project' ? 'Project Inquiry' : 'Configure Your Session'}
+                  </h2>
+                  <p className="text-white/50 text-xs sm:text-sm mt-0.5">
+                    {step === 0 ? 'How can we help you today?' : bookingPath === 'full-project' ? 'Let\'s bring your vision to life' : sessionMode === 'rental' ? 'Studio Rental' : 'Recording Session'}
+                  </p>
+                </div>
+                {/* Session Type Badge - Only show on config steps for record-only path */}
+                {step > 0 && bookingPath === 'record-only' && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={sessionMode}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className={`flex items-center px-3 py-1 rounded text-xs font-semibold uppercase tracking-wide ${
+                        sessionMode === 'rental'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                      }`}
+                    >
+                      {sessionMode === 'rental' ? 'Rental' : 'Recording'}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
               </div>
               <button
                 onClick={onClose}
@@ -1514,14 +1555,23 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
                               type="button"
                               onClick={() => setSessionHours(hour)}
                               className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center touch-manipulation transition-all ${
-                                sessionHours === hour 
-                                  ? 'bg-white/20 text-white font-bold' 
-                                  : 'text-white/50 hover:text-white/80'
+                                hour === 1
+                                  ? sessionHours === 1
+                                    ? 'bg-amber-500/30 text-amber-400 font-bold ring-2 ring-amber-500/50'
+                                    : 'text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10'
+                                  : sessionHours === hour 
+                                    ? 'bg-white/20 text-white font-bold' 
+                                    : 'text-white/50 hover:text-white/80'
                               }`}
                             >
                               <span className="text-sm sm:text-base">{hour}</span>
                             </button>
                           ))}
+                        </div>
+                        
+                        {/* Session Type Labels */}
+                        <div className="flex justify-center mt-3">
+                          <span className="text-[10px] sm:text-xs text-white/40">Recording sessions require 2+ hours</span>
                         </div>
                       </div>
                     </div>
@@ -1662,15 +1712,40 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
                         </div>
                       </div>
 
-                      {/* Rental Mode Notice */}
+                      {/* Rental Mode Notice - Enhanced */}
                       {sessionMode === 'rental' && (
-                        <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2">
-                          <Building2 className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-amber-200 text-xs font-medium">Studio Rental Mode</p>
-                            <p className="text-amber-200/70 text-xs">Without an engineer, this becomes a studio rental. Post-production services are not available.</p>
+                        <motion.div 
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-4 p-4 bg-amber-500/10 border border-amber-500/40 rounded-lg"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 bg-amber-500/15 rounded border border-amber-500/30 shrink-0">
+                              <Building2 className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="text-amber-400 text-sm font-semibold">Studio Rental Mode</p>
+                                <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30 font-medium">NO ENGINEER</span>
+                              </div>
+                              <p className="text-white/60 text-xs leading-relaxed">
+                                You're booking the studio space only. Bring your own engineer or work independently. Post-production services are not available in rental mode.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  // Keep current duration if already >= 2, otherwise set to 2
+                                  if (sessionHours < 2) setSessionHours(2)
+                                  setIncludeEngineer(true)
+                                }}
+                                className="mt-3 text-xs text-white font-medium bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded transition-colors flex items-center gap-1.5"
+                              >
+                                <Mic2 className="w-3.5 h-3.5" />
+                                Switch to Recording Session
+                              </button>
+                            </div>
                           </div>
-                        </div>
+                        </motion.div>
                       )}
 
                     </div>
@@ -1691,7 +1766,12 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
                         <div className="grid grid-cols-2 gap-2 mb-4">
                           <button
                             type="button"
-                            onClick={() => setIncludeMixMasterBundle(true)}
+                            onClick={() => {
+                              setIncludeMixMasterBundle(true)
+                              // Clear à la carte selections when switching to bundle
+                              setIncludeMixing(false)
+                              setIncludeMastering(false)
+                            }}
                             className={`p-3 rounded-xl text-center transition-all ${
                               includeMixMasterBundle 
                                 ? 'bg-white text-black' 
@@ -2173,10 +2253,10 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
                                         const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day)
                                         const dateStr = date.toISOString().split('T')[0]
                                         const isTooSoon = date < minBookingDate
-                                        const isSunday = date.getDay() === 0
+                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6
                                         const isSelected = contactInfo.preferredDate === dateStr
                                         const isToday = date.toDateString() === today.toDateString()
-                                        const isDisabled = isTooSoon || isSunday
+                                        const isDisabled = isTooSoon
                                         
                                         days.push(
                                           <button
@@ -2195,7 +2275,9 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
                                                   ? 'text-white/20 cursor-not-allowed'
                                                   : isToday
                                                     ? 'bg-white/10 text-white hover:bg-white/20'
-                                                    : 'text-white/70 hover:bg-white/10'
+                                                    : isWeekend
+                                                      ? 'text-amber-400/80 hover:bg-amber-500/10'
+                                                      : 'text-white/70 hover:bg-white/10'
                                             }`}
                                           >
                                             {day}
@@ -2826,6 +2908,67 @@ export default function BookingModal({ isOpen, onClose }: BookingModalProps) {
               </div>
             )}
           </motion.div>
+
+          {/* Rental Confirmation Modal */}
+          <AnimatePresence>
+            {showRentalConfirm && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-4"
+                onClick={handleCancelRental}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-6 max-w-md w-full shadow-2xl"
+                >
+                  <div className="flex items-start gap-4 mb-5">
+                    <div className="p-2.5 bg-amber-500/15 rounded-lg border border-amber-500/30 shrink-0">
+                      <Building2 className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">Switch to Studio Rental?</h3>
+                      <p className="text-amber-500 text-sm mt-0.5">1-hour bookings are rental only</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6">
+                    <p className="text-white/90 text-sm leading-relaxed">
+                      <strong className="text-white">Recording sessions require a minimum of 2 hours</strong> to ensure quality results with our engineer.
+                    </p>
+                    <p className="text-white/60 text-sm mt-3">
+                      1-hour bookings are <strong className="text-amber-400">Studio Rentals</strong> — you'll have access to the space but no engineer will be provided.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCancelRental()
+                      }}
+                      className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
+                    >
+                      Keep Recording
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleConfirmRental()
+                      }}
+                      className="btn-secondary text-sm px-5 py-2.5 whitespace-nowrap"
+                    >
+                      Switch to Rental
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
                   </>
       )}

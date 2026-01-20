@@ -60,6 +60,7 @@ interface BookingData {
     includeProducer: boolean
     producerHours?: number
     isAfterHours: boolean
+    afterHoursCount?: number
     total: number
   }
   postProduction: {
@@ -253,8 +254,8 @@ function generateStudioEmailHTML(data: BookingData): string {
             ` : ''}
             ${session.isAfterHours ? `
             <tr>
-              <td style="padding: 4px 0; color: #b45309; font-size: 13px;">After-Hours Premium</td>
-              <td style="padding: 4px 0; color: #b45309; font-size: 13px; text-align: right;">+CA$5/hr</td>
+              <td style="padding: 4px 0; color: #b45309; font-size: 13px;">After-Hours Premium (${session.afterHoursCount || 1}hr × CA$5/hr)</td>
+              <td style="padding: 4px 0; color: #b45309; font-size: 13px; text-align: right;">+CA$${(session.afterHoursCount || 1) * 5}</td>
             </tr>
             ` : ''}
           </table>
@@ -502,8 +503,8 @@ function generateClientConfirmationHTML(data: BookingData): string {
             ${session.isAfterHours ? `
             <tr>
               <td style="padding: 6px 0; color: #b45309; font-size: 14px; width: 24px; vertical-align: top;">*</td>
-              <td style="padding: 6px 0; color: #18181b; font-size: 14px;">After-Hours Premium</td>
-              <td style="padding: 6px 0; color: #b45309; font-size: 14px; text-align: right;">+CA$5/hr</td>
+              <td style="padding: 6px 0; color: #18181b; font-size: 14px;">After-Hours Premium (${session.afterHoursCount || 1} hrs)</td>
+              <td style="padding: 6px 0; color: #b45309; font-size: 14px; text-align: right;">+CA$${(session.afterHoursCount || 1) * 5}</td>
             </tr>
             ` : ''}
           </table>
